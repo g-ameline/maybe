@@ -118,7 +118,7 @@ func Print_green(things ...any) {
 
 func Fatal[a any](m Maybe[a]) Maybe[a] {
 	if m.Error != nil {
-		log_fatal_red(red, m.Error, reset)
+		Log_fatal_red(red, m.Error, reset)
 	}
 	return m
 }
@@ -127,7 +127,7 @@ func (m Maybe[a]) Fatal() Maybe[a] {
 }
 func Ascertain[a any](m Maybe[a]) a {
 	if m.Error != nil {
-		log_fatal_red(m.Error)
+		Log_fatal_red(m.Error)
 	}
 	return m.Value
 }
@@ -136,9 +136,9 @@ func (m Maybe[a]) Ascertain() a {
 }
 func Print[a any](m Maybe[a], message ...string) Maybe[a] {
 	if m.Error != nil {
-		print_red(message, m.Error)
+		Print_red(message, m.Error)
 	}
-	print_green(message, m.Value)
+	Print_green(message, m.Value)
 	return m
 }
 func (m Maybe[a]) Print(message ...string) Maybe[a] {
@@ -157,11 +157,11 @@ func (m Maybe[a]) Is_error() bool {
 
 func Fail(err error, message ...string) {
 	if err != nil {
-		log_fatal_red(err, message)
+		Log_fatal_red(err, message)
 	}
 }
 func Check(err error, message ...string) {
 	if err != nil {
-		print_red(err, message)
+		Print_red(err, message)
 	}
 }

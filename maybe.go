@@ -103,16 +103,16 @@ const red = "\033[31m"
 const green = "\033[32m"
 const reset = "\033[0m"
 
-func log_fatal_red(things ...any) {
+func Log_fatal_red(things ...any) {
 	log.Fatalln(red, things, reset)
 }
-func log_fatal_green(things ...any) {
+func Log_fatal_green(things ...any) {
 	log.Fatalln(green, things, reset)
 }
-func print_red(things ...any) {
+func Print_red(things ...any) {
 	log.Println(red, things, reset)
 }
-func print_green(things ...any) {
+func Print_green(things ...any) {
 	log.Println(green, things, reset)
 }
 

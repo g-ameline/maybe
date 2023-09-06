@@ -85,6 +85,9 @@ func Convey[a, b any](previous Maybe[a], something any) Maybe[b] {
 	case func() error:
 		f := something.(func() error)
 		return Mayhaps(*new(b), f())
+	case func():
+		something.(func())()
+		return Mayhaps(*new(b), nil)
 	}
 	fmt.Printf("Underlying Type: %T\n", something)
 	return Maybe[b]{Error: errors.New("badly fail at func type assertion when ligating")}
@@ -103,42 +106,53 @@ const red = "\033[31m"
 const green = "\033[32m"
 const reset = "\033[0m"
 
-func Log_fatal_red(things ...any) {
+func log_fatal_red(things ...any) {
 	log.Fatalln(red, things, reset)
 }
-func Log_fatal_green(things ...any) {
+func log_fatal_green(things ...any) {
 	log.Fatalln(green, things, reset)
 }
-func Print_red(things ...any) {
+func print_red(things ...any) {
 	log.Println(red, things, reset)
 }
-func Print_green(things ...any) {
+func print_green(things ...any) {
 	log.Println(green, things, reset)
 }
 
-func Fatal[a any](m Maybe[a]) Maybe[a] {
+func Fatal[a any](m Maybe[a], messages ...string) Maybe[a] {
 	if m.Error != nil {
-		Log_fatal_red(red, m.Error, reset)
+		log_fatal_red(red, messages, m.Error, reset)
 	}
 	return m
 }
-func (m Maybe[a]) Fatal() Maybe[a] {
-	return Fatal(m)
+func (m Maybe[a]) Fatal(messages ...string) Maybe[a] {
+	return Fatal(m, messages...)
+}
+func Panic[a any](m Maybe[a], message string) Maybe[a] {
+	if m.Error != nil {
+		print_red(m.Error)
+		panic(message)
+	}
+	return m
+}
+func (m Maybe[a]) Panic(message string) Maybe[a] {
+	return Panic(m, message)
 }
 func Ascertain[a any](m Maybe[a]) a {
 	if m.Error != nil {
-		Log_fatal_red(m.Error)
+		log_fatal_red(m.Error)
 	}
 	return m.Value
 }
 func (m Maybe[a]) Ascertain() a {
 	return Ascertain(m)
 }
+
 func Print[a any](m Maybe[a], message ...string) Maybe[a] {
 	if m.Error != nil {
-		Print_red(message, m.Error)
+		print_red(message, m.Error)
 	}
-	Print_green(message, m.Value)
+	print_green(message, m.Value)
 	return m
 }
 func (m Maybe[a]) Print(message ...string) Maybe[a] {
@@ -155,13 +169,105 @@ func (m Maybe[a]) Is_error() bool {
 	return Is_error(m)
 }
 
+func Replace_error[a any](m Maybe[a], message string) Maybe[a] {
+	if m.Error != nil {
+		return Maybe[a]{Error: fmt.Errorf(message)}
+	}
+	return m
+}
+func (m Maybe[a]) Replace_error(message string) Maybe[a] {
+	return Replace_error(m, message)
+}
+
 func Fail(err error, message ...string) {
 	if err != nil {
-		Log_fatal_red(err, message)
+		log_fatal_red(err, message)
 	}
 }
-func Check(err error, message ...string) {
+func Warn(err error, message ...string) {
 	if err != nil {
-		Print_red(err, message)
+		print_red(err, message)
 	}
+}
+func if_nil_do[T any](wrength error, something any) T {
+	if wrength != nil {
+		panic(wrength)
+	}
+	switch something.(type) {
+	case T:
+		return something.(T)
+	case func() T:
+		return something.(func() T)()
+	case func() (T, error):
+		res, err := something.(func() (T, error))()
+		if err != nil {
+			panic(err)
+		}
+		return res
+	case func():
+		something.(func())()
+		return *new(T)
+	}
+	fmt.Printf("Underlying Type: %T\n", something)
+	panic(something)
+}
+func if_nil_try[T any](wrength error, something any) T {
+	if wrength != nil {
+		return *new(T)
+	}
+	switch something.(type) {
+	case T:
+		return something.(T)
+	case func() T:
+		return something.(func() T)()
+	case func() (T, error):
+		res, _ := something.(func() (T, error))()
+		return res
+	case func():
+		something.(func())()
+		return *new(T)
+	}
+	fmt.Printf("Underlying Type: %T\n", something)
+	panic(something)
+}
+func if_error_do[T any](wrength error, something any) T {
+	if wrength == nil {
+		return *new(T)
+	}
+	switch something.(type) {
+	case T:
+		return something.(T)
+	case func() T:
+		return something.(func() T)()
+	case func() (T, error):
+		res, err := something.(func() (T, error))()
+		if err != nil {
+			panic(err)
+		}
+		return res
+	case func():
+		something.(func())()
+		return *new(T)
+	}
+	fmt.Printf("Underlying Type: %T\n", something)
+	panic(something)
+}
+func if_error_try[T any](wrength error, something any) T {
+	if wrength != nil {
+		return *new(T)
+	}
+	switch something.(type) {
+	case T:
+		return something.(T)
+	case func() T:
+		return something.(func() T)()
+	case func() (T, error):
+		res, _ := something.(func() (T, error))()
+		return res
+	case func():
+		something.(func())()
+		return *new(T)
+	}
+	fmt.Printf("Underlying Type: %T\n", something)
+	panic(something)
 }

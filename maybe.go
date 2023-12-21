@@ -1,10 +1,13 @@
 package maybe
 
 import (
-	"errors"
 	"fmt"
-	"log"
 )
+
+const red = "\033[31m"
+const yellow = "\033[33m"
+const green = "\033[32m"
+const reset = "\033[0m"
 
 type Maybe[a any] struct {
 	Value a
@@ -90,7 +93,7 @@ func Convey[a, b any](previous Maybe[a], something any) Maybe[b] {
 		return Mayhaps(*new(b), nil)
 	}
 	fmt.Printf("Underlying Type: %T\n", something)
-	return Maybe[b]{Error: errors.New("badly fail at func type assertion when ligating")}
+	return Maybe[b]{Error: fmt.Errorf("badly fail at func type assertion when ligating")}
 }
 func Relinquish[a any](m Maybe[a]) (a, error) {
 	if m.Error == nil {
@@ -102,172 +105,65 @@ func (m Maybe[a]) Relinquish() (a, error) {
 	return Relinquish(m)
 }
 
-const red = "\033[31m"
-const green = "\033[32m"
-const reset = "\033[0m"
-
-func log_fatal_red(things ...any) {
-	log.Fatalln(red, things, reset)
+func panic_red(things ...any) {
+	fmt.Println(red, things, reset)
+	panic("")
 }
-func log_fatal_green(things ...any) {
-	log.Fatalln(green, things, reset)
+func panic_green(things ...any) {
+	fmt.Println(green, things, reset)
+	panic("")
 }
 func print_red(things ...any) {
-	log.Println(red, things, reset)
+	fmt.Println(red, things, reset)
+}
+func print_yellow(things ...any) {
+	fmt.Println(yellow, things, reset)
 }
 func print_green(things ...any) {
-	log.Println(green, things, reset)
+	fmt.Println(green, things, reset)
 }
 
-func Fatal[a any](m Maybe[a], messages ...string) Maybe[a] {
-	if m.Error != nil {
-		log_fatal_red(red, messages, m.Error, reset)
-	}
-	return m
-}
-func (m Maybe[a]) Fatal(messages ...string) Maybe[a] {
-	return Fatal(m, messages...)
-}
-func Panic[a any](m Maybe[a], message string) Maybe[a] {
-	if m.Error != nil {
-		print_red(m.Error)
-		panic(message)
-	}
-	return m
-}
 func (m Maybe[a]) Panic(message string) Maybe[a] {
-	return Panic(m, message)
+	Panic(m.Error)
+	return m
 }
-func Ascertain[a any](m Maybe[a]) a {
+
+func (m Maybe[a]) Ascertain() a {
 	if m.Error != nil {
-		log_fatal_red(m.Error)
+		panic_red(m.Error)
 	}
 	return m.Value
 }
-func (m Maybe[a]) Ascertain() a {
-	return Ascertain(m)
-}
 
-func Print[a any](m Maybe[a], message ...string) Maybe[a] {
+func (m Maybe[a]) Print(message ...string) Maybe[a] {
 	if m.Error != nil {
 		print_red(message, m.Error)
 	}
 	print_green(message, m.Value)
 	return m
 }
-func (m Maybe[a]) Print(message ...string) Maybe[a] {
-	return Print(m, message...)
-}
 
-func Is_error[a any](m Maybe[a]) bool {
+func (m Maybe[a]) Is_error() bool {
 	if m.Error != nil {
 		return true
 	}
 	return false
 }
-func (m Maybe[a]) Is_error() bool {
-	return Is_error(m)
-}
 
-func Replace_error[a any](m Maybe[a], message string) Maybe[a] {
+func (m Maybe[a]) Replace_error(message string) Maybe[a] {
 	if m.Error != nil {
 		return Maybe[a]{Error: fmt.Errorf(message)}
 	}
 	return m
 }
-func (m Maybe[a]) Replace_error(message string) Maybe[a] {
-	return Replace_error(m, message)
-}
 
-func Fail(err error, message ...string) {
+func Panic(err error, message ...string) {
 	if err != nil {
-		log_fatal_red(err, message)
+		panic_red(err, message)
 	}
 }
 func Warn(err error, message ...string) {
 	if err != nil {
-		print_red(err, message)
+		print_yellow(err, message)
 	}
-}
-func if_nil_do[T any](wrength error, something any) T {
-	if wrength != nil {
-		panic(wrength)
-	}
-	switch something.(type) {
-	case T:
-		return something.(T)
-	case func() T:
-		return something.(func() T)()
-	case func() (T, error):
-		res, err := something.(func() (T, error))()
-		if err != nil {
-			panic(err)
-		}
-		return res
-	case func():
-		something.(func())()
-		return *new(T)
-	}
-	fmt.Printf("Underlying Type: %T\n", something)
-	panic(something)
-}
-func if_nil_try[T any](wrength error, something any) T {
-	if wrength != nil {
-		return *new(T)
-	}
-	switch something.(type) {
-	case T:
-		return something.(T)
-	case func() T:
-		return something.(func() T)()
-	case func() (T, error):
-		res, _ := something.(func() (T, error))()
-		return res
-	case func():
-		something.(func())()
-		return *new(T)
-	}
-	fmt.Printf("Underlying Type: %T\n", something)
-	panic(something)
-}
-func if_error_do[T any](wrength error, something any) T {
-	if wrength == nil {
-		return *new(T)
-	}
-	switch something.(type) {
-	case T:
-		return something.(T)
-	case func() T:
-		return something.(func() T)()
-	case func() (T, error):
-		res, err := something.(func() (T, error))()
-		if err != nil {
-			panic(err)
-		}
-		return res
-	case func():
-		something.(func())()
-		return *new(T)
-	}
-	fmt.Printf("Underlying Type: %T\n", something)
-	panic(something)
-}
-func if_error_try[T any](wrength error, something any) T {
-	if wrength != nil {
-		return *new(T)
-	}
-	switch something.(type) {
-	case T:
-		return something.(T)
-	case func() T:
-		return something.(func() T)()
-	case func() (T, error):
-		res, _ := something.(func() (T, error))()
-		return res
-	case func():
-		something.(func())()
-		return *new(T)
-	}
-	fmt.Printf("Underlying Type: %T\n", something)
-	panic(something)
 }

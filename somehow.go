@@ -4,146 +4,84 @@ import (
 	"fmt"
 )
 
-func Somehow_must[Out any](error_in error, somwhow func(error) bool, somewhat any) Out {
-	if !somwhow(error_in) {
-		panic_red(error_in)
+func Somehow[In any, Out any](state_in In, state_in_ok func(In) bool, error_reaction func(error) error, callback any) (Out, error) {
+	if !state_in_ok(state_in) {
+		return *new(Out), error_reaction(fmt.Errorf(fmt.Sprint(state_in)))
 	}
-	switch somewhat.(type) {
+	switch callback.(type) {
 	case Out:
-		return somewhat.(Out)
+		return callback.(Out), nil
 	case func() Out:
-		return somewhat.(func() Out)()
+		return callback.(func() Out)(), nil
 	case func() (Out, error):
-		output, error_out := somewhat.(func() (Out, error))()
-		Panic(error_out)
-		return output
+		output, error_out := callback.(func() (Out, error))()
+		if error_out != nil {
+			error_out = error_reaction(error_out)
+		}
+		return output, error_out
+	case func() error:
+		error_out := callback.(func() error)()
+		if error_out != nil {
+			error_out = error_reaction(error_out)
+		}
+		return *new(Out), nil
 	case func():
-		somewhat.(func())()
-		return *new(Out)
+		callback.(func())()
+		return *new(Out), nil
 	}
-	fmt.Printf("Failed type assertion;\nUnderlying Type: %T\n", somewhat)
-	panic(somewhat)
-}
-func Somehow_do[Out any](error_in error, somwhow func(error) bool, somewhat any) (Out, error) {
-	if !somwhow(error_in) {
-		return *new(Out), error_in
-	}
-	switch somewhat.(type) {
-	case Out:
-		return somewhat.(Out), error(nil)
-	case func() Out:
-		return somewhat.(func() Out)(), error(nil)
-	case func() (Out, error):
-		return somewhat.(func() (Out, error))()
-	case func():
-		somewhat.(func())()
-		return *new(Out), error(nil)
-	}
-	fmt.Printf("Failed type assertion;\nUnderlying Type: %T\n", somewhat)
-	panic(somewhat)
-}
-func Somehow_try[Out any](error_in error, somwhow func(error) bool, somewhat any) (Out, error) {
-	if !somwhow(error_in) {
-		return *new(Out), error_in
-	}
-	switch somewhat.(type) {
-	case Out:
-		return somewhat.(Out), error(nil)
-	case func() Out:
-		return somewhat.(func() Out)(), error(nil)
-	case func() (Out, error):
-		output, _ := somewhat.(func() (Out, error))()
-		return output, error_in
-	case func():
-		somewhat.(func())()
-		return *new(Out), error_in
-	}
-	fmt.Printf("Failed type assertion;\nUnderlying Type: %T\n", somewhat)
-	panic(somewhat)
-}
-func If_nil_must[Out any](wrength error, something any) Out {
-	return Somehow_must[Out](
-		wrength,
-		func(err error) bool { return err == nil },
-		something,
-	)
-}
-func If_error_must[Out any](wrength error, something any) Out {
-	return Somehow_must[Out](
-		wrength,
-		func(err error) bool { return err != nil },
-		something,
-	)
-}
-func If_nil_do[Out any](wrength error, something any) (Out, error) {
-	return Somehow_do[Out](
-		wrength,
-		func(err error) bool { return err == nil },
-		something,
-	)
-}
-func If_error_do[Out any](wrength error, something any) (Out, error) {
-	return Somehow_do[Out](
-		wrength,
-		func(err error) bool { return err != nil },
-		something,
-	)
-}
-func If_nil_try[Out any](wrength error, something any) (Out, error) {
-	return Somehow_try[Out](
-		wrength,
-		func(err error) bool { return err == nil },
-		something,
-	)
-}
-func If_error_try[Out any](wrength error, something any) (Out, error) {
-	return Somehow_try[Out](
-		wrength,
-		func(err error) bool { return err != nil },
-		something,
-	)
+	fmt.Printf("Failed type assertion;\nUnderlying Type: %T\n", callback)
+	panic(callback)
 }
 
-// for map stuff
-func If_ok_must[Out any](ok_or_nok bool, something any) Out {
-	return Somehow_must[Out](
-		nil,
-		func(err error) bool { return ok_or_nok },
-		something,
-	)
+// state_in_checks
+func if_nil(err error) bool          { return err == nil }
+func if_error(err error) bool        { return err != nil }
+func if_ok(true_or_false bool) bool  { return true_or_false }
+func if_nok(true_or_false bool) bool { return !true_or_false }
+
+// error_reactions
+func must(err error) error { panic_red(err); return err }
+func do(err error) error   { return err }
+func try(err error) error  { return nil }
+
+// main usge when sticking to happy path
+func If_nil_must[In error, Out any](state_in In, callback any) (Out, error) {
+	return Somehow[error, Out](state_in, if_nil, must, callback)
 }
-func If_nok_must[Out any](ok_or_nok bool, something any) Out {
-	return Somehow_must[Out](
-		nil,
-		func(err error) bool { return ok_or_nok },
-		something,
-	)
+func If_nil_do[In error, Out any](state_in In, callback any) (Out, error) {
+	return Somehow[error, Out](state_in, if_nil, do, callback)
 }
-func If_ok_do[Out any](ok_or_nok bool, something any) (Out, error) {
-	return Somehow_do[Out](
-		nil,
-		func(err error) bool { return ok_or_nok },
-		something,
-	)
+func If_nil_try[In error, Out any](state_in In, callback any) (Out, error) {
+	return Somehow[error, Out](state_in, if_nil, try, callback)
 }
-func If_nok_do[Out any](ok_or_nok bool, something any) (Out, error) {
-	return Somehow_do[Out](
-		nil,
-		func(err error) bool { return ok_or_nok },
-		something,
-	)
+
+// if need to deal with sad path
+func If_error_must[In error, Out any](state_in In, callback any) (Out, error) {
+	return Somehow[error, Out](state_in, if_error, must, callback)
 }
-func If_ok_try[Out any](ok_or_nok bool, something any) (Out, error) {
-	return Somehow_try[Out](
-		nil,
-		func(err error) bool { return ok_or_nok },
-		something,
-	)
+func If_error_do[In error, Out any](state_in In, callback any) (Out, error) {
+	return Somehow[error, Out](state_in, if_error, do, callback)
 }
-func If_nok_try[Out any](ok_or_nok bool, something any) (Out, error) {
-	return Somehow_try[Out](
-		nil,
-		func(err error) bool { return ok_or_nok },
-		something,
-	)
+func If_error_try[In error, Out any](state_in In, callback any) (Out, error) {
+	return Somehow[error, Out](state_in, if_error, try, callback)
+}
+
+// if working with boolean
+func If_ok_must[In bool, Out any](state_in bool, callback any) (Out, error) {
+	return Somehow[bool, Out](state_in, if_ok, must, callback)
+}
+func If_ok_do[In bool, Out any](state_in bool, callback any) (Out, error) {
+	return Somehow[bool, Out](state_in, if_ok, do, callback)
+}
+func If_ok_try[In bool, Out any](state_in bool, callback any) (Out, error) {
+	return Somehow[bool, Out](state_in, if_ok, try, callback)
+}
+func If_nok_must[In bool, Out any](state_in bool, callback any) (Out, error) {
+	return Somehow[bool, Out](state_in, if_nok, must, callback)
+}
+func If_nok_do[In bool, Out any](state_in bool, callback any) (Out, error) {
+	return Somehow[bool, Out](state_in, if_nok, do, callback)
+}
+func If_nok_try[In bool, Out any](state_in bool, callback any) (Out, error) {
+	return Somehow[bool, Out](state_in, if_nok, try, callback)
 }

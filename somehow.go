@@ -6,7 +6,7 @@ import (
 
 func Somehow[In any, Out any](state_in In, state_in_ok func(In) bool, error_reaction func(error) error, something any) (Out, error) {
 	if !state_in_ok(state_in) {
-		return *new(Out), error_reaction(fmt.Errorf(fmt.Sprint(state_in)))
+		return *new(Out), fmt.Errorf(fmt.Sprint("somehow unsatisfying condition", state_in))
 	}
 	switch something.(type) {
 	case Out:

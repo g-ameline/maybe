@@ -6,7 +6,7 @@ import (
 
 func Somehow[In any, Out any](state_in In, state_in_ok func(In) bool, error_reaction func(error) error, something any) (Out, error) {
 	if !state_in_ok(state_in) {
-		return *new(Out), fmt.Errorf(fmt.Sprint("somehow unsatisfying condition", state_in))
+		return *new(Out), fmt.Errorf(fmt.Sprint(state_in))
 	}
 	switch something.(type) {
 	case Out:
@@ -37,9 +37,14 @@ func if_ok(true_or_false bool) bool  { return true_or_false }
 func if_nok(true_or_false bool) bool { return !true_or_false }
 
 // error_reactions
-func must(err error) error { panic_red(err); return err }
-func do(err error) error   { return err }
-func try(err error) error  { return nil }
+func must(err error) error {
+	if err != nil {
+		panic_red(err)
+	}
+	return err
+}
+func do(err error) error  { return err }
+func try(err error) error { return nil }
 
 // main usge when sticking to happy path
 func If_nil_must[Out any](state_in error, something any) (Out, error) {

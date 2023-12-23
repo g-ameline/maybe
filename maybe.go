@@ -95,36 +95,16 @@ func Convey[a, b any](previous Maybe[a], something any) Maybe[b] {
 	fmt.Printf("Underlying Type: %T\n", something)
 	return Maybe[b]{Error: fmt.Errorf("badly fail at func type assertion when ligating")}
 }
-func Relinquish[a any](m Maybe[a]) (a, error) {
+
+func (m Maybe[a]) Relinquish() (a, error) {
 	if m.Error == nil {
 		return m.Value, m.Error
 	}
 	return *new(a), m.Error
 }
-func (m Maybe[a]) Relinquish() (a, error) {
-	return Relinquish(m)
-}
-
-func panic_red(things ...any) {
-	fmt.Println(red, things, reset)
-	panic("")
-}
-func panic_green(things ...any) {
-	fmt.Println(green, things, reset)
-	panic("")
-}
-func print_red(things ...any) {
-	fmt.Println(red, things, reset)
-}
-func print_yellow(things ...any) {
-	fmt.Println(yellow, things, reset)
-}
-func print_green(things ...any) {
-	fmt.Println(green, things, reset)
-}
 
 func (m Maybe[a]) Panic(message string) Maybe[a] {
-	Panic(m.Error)
+	panic_red(m.Error)
 	return m
 }
 
@@ -155,15 +135,4 @@ func (m Maybe[a]) Replace_error(message string) Maybe[a] {
 		return Maybe[a]{Error: fmt.Errorf(message)}
 	}
 	return m
-}
-
-func Panic(err error, message ...string) {
-	if err != nil {
-		panic_red(err, message)
-	}
-}
-func Warn(err error, message ...string) {
-	if err != nil {
-		print_yellow(err, message)
-	}
 }

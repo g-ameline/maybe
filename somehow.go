@@ -35,6 +35,8 @@ func if_nil(err error) bool          { return err == nil }
 func if_error(err error) bool        { return err != nil }
 func if_ok(true_or_false bool) bool  { return true_or_false }
 func if_nok(true_or_false bool) bool { return !true_or_false }
+func if_silent(text string) bool     { return text == "" }
+func if_wordy(text string) bool      { return text != "" }
 
 // error_reactions
 func must(err error) error {
@@ -86,4 +88,24 @@ func If_nok_do[Out any](state_in bool, something any) (Out, error) {
 }
 func If_nok_try[Out any](state_in bool, something any) (Out, error) {
 	return Somehow[bool, Out](state_in, if_nok, try, something)
+}
+
+// if working with boolean
+func If_silent_must[Out any](state_in string, something any) (Out, error) {
+	return Somehow[string, Out](state_in, if_silent, must, something)
+}
+func If_silent_do[Out any](state_in string, something any) (Out, error) {
+	return Somehow[string, Out](state_in, if_silent, do, something)
+}
+func If_silent_try[Out any](state_in string, something any) (Out, error) {
+	return Somehow[string, Out](state_in, if_silent, try, something)
+}
+func If_wordy_must[Out any](state_in string, something any) (Out, error) {
+	return Somehow[string, Out](state_in, if_wordy, must, something)
+}
+func If_wordy_do[Out any](state_in string, something any) (Out, error) {
+	return Somehow[string, Out](state_in, if_wordy, do, something)
+}
+func If_wordy_try[Out any](state_in string, something any) (Out, error) {
+	return Somehow[string, Out](state_in, if_wordy, try, something)
 }

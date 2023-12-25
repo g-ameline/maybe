@@ -36,13 +36,13 @@ func Rename_error(err error, message string) error {
 	}
 	return err
 }
-func ok_to_err(ok_or_not bool, message string) error {
+func Ok_to_err(ok_or_not bool, message string) error {
 	if ok_or_not {
 		return fmt.Errorf(message)
 	}
 	return error(nil)
 }
-func nok_to_err(ok_or_not bool, message string) error {
+func Nok_to_err(ok_or_not bool, message string) error {
 	if !ok_or_not {
 		return fmt.Errorf(message)
 	}

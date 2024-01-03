@@ -21,6 +21,19 @@ func Mayhaps[a any](val a, err error) Maybe[a] {
 	}
 }
 
+func Maymap[k comparable, v any](a_map map[k]v, a_key k) Maybe[v] {
+	if value, ok := a_map[a_key]; ok {
+		return Maybe[v]{
+			Value: value,
+			Error: error(nil),
+		}
+	}
+	return Maybe[v]{
+		Value: *new(v),
+		Error: fmt.Errorf("key %v no present", a_key),
+	}
+}
+
 func Bind_i_o_e[in, out any](previous Maybe[in], some_function func(in) (out, error)) Maybe[out] {
 	if previous.Error != nil {
 		return Maybe[out]{Error: previous.Error}

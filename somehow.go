@@ -4,6 +4,13 @@ import (
 	"fmt"
 )
 
+func If_key[k comparable, v any](a_map map[k]v, a_key k) (v, error) {
+	if value, ok := a_map[a_key]; ok {
+		return value, error(nil)
+	}
+	return *new(v), fmt.Errorf("key %v no present in map %v", a_key, a_map)
+}
+
 func Somehow[In any, Out any](state_in In, state_in_ok func(In) bool, error_reaction func(error) error, something any) (Out, error) {
 	if !state_in_ok(state_in) {
 		return *new(Out), fmt.Errorf(fmt.Sprint(state_in))
@@ -36,7 +43,7 @@ func if_error(err error) bool        { return err != nil }
 func if_ok(true_or_false bool) bool  { return true_or_false }
 func if_nok(true_or_false bool) bool { return !true_or_false }
 func if_silent(text string) bool     { return text == "" }
-func if_wordy(text string) bool      { return text != "" }
+func if_wordly(text string) bool     { return text != "" }
 
 // error_reactions
 func must(err error) error {
@@ -100,12 +107,12 @@ func If_silent_do[Out any](state_in string, something any) (Out, error) {
 func If_silent_try[Out any](state_in string, something any) (Out, error) {
 	return Somehow[string, Out](state_in, if_silent, try, something)
 }
-func If_wordy_must[Out any](state_in string, something any) (Out, error) {
-	return Somehow[string, Out](state_in, if_wordy, must, something)
+func If_wordly_must[Out any](state_in string, something any) (Out, error) {
+	return Somehow[string, Out](state_in, if_wordly, must, something)
 }
-func If_wordy_do[Out any](state_in string, something any) (Out, error) {
-	return Somehow[string, Out](state_in, if_wordy, do, something)
+func If_wordly_do[Out any](state_in string, something any) (Out, error) {
+	return Somehow[string, Out](state_in, if_wordly, do, something)
 }
-func If_wordy_try[Out any](state_in string, something any) (Out, error) {
-	return Somehow[string, Out](state_in, if_wordy, try, something)
+func If_wordly_try[Out any](state_in string, something any) (Out, error) {
+	return Somehow[string, Out](state_in, if_wordly, try, something)
 }
